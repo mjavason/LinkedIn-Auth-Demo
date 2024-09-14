@@ -1,17 +1,23 @@
-import express, { Request, Response, NextFunction } from 'express';
-import 'express-async-errors';
-import cors from 'cors';
 import axios from 'axios';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
+import passport from 'passport';
+import session from 'express-session';
 import { setupSwagger } from './swagger.config';
+import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
+import 'express-async-errors';
 
 //#region App Setup
 const app = express();
 
 dotenv.config({ path: './.env' });
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const clientID = process.env.LINKEDIN_CLIENT_ID || 'xxx';
+const clientSecret = process.env.LINKEDIN_CLIENT_SECRET || 'xxx';
+const callbackURL = process.env.LINKEDIN_CALLBACK_URL || 'xxx';
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -19,10 +25,74 @@ app.use(cors());
 app.use(morgan('dev'));
 setupSwagger(app, BASE_URL);
 
+passport.use(
+  new LinkedInStrategy(
+    {
+      clientID,
+      clientSecret,
+      callbackURL,
+      scope: ['r_emailaddress', 'r_liteprofile'], // Request these scopes from LinkedIn
+    },
+    function (
+      accessToken: string,
+      refreshToken: string,
+      profile: any,
+      done: any
+    ) {
+      // Here, you can create or update your user in the database
+      console.log('LinkedIn profile', profile);
+      return done(null, profile); // Pass the profile data to the next middleware
+    }
+  )
+);
+
+// Serialize and deserialize user info for the session
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((obj: any, done) => {
+  done(null, obj);
+});
+
 //#endregion App Setup
 
 //#region Code here
-console.log('Hello world');
+// Middleware to handle sessions
+app.use(
+  session({
+    secret: 'SECRET',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+// LinkedIn auth route
+app.get('/auth/linkedin', passport.authenticate('linkedin'));
+
+// LinkedIn callback route
+app.get(
+  '/auth/linkedin/callback',
+  passport.authenticate('linkedin', {
+    failureRedirect: '/',
+  }),
+  (req: Request, res: Response) => {
+    // Optionally handle authenticated user data
+    return res.send(req.user);
+  }
+);
+
+app.get('/logout', (req: Request, res: Response, next: NextFunction) => {
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
+  });
+});
 //#endregion
 
 //#region Server Setup
