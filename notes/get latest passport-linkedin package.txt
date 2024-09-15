@@ -1,0 +1,5 @@
+just change in your package.json "passport-linkedin-oauth2": "git+https://github.com/auth0/passport-linkedin-oauth2",
+
+and re-install
+
+the latest npm package is 2.0.0 in the repo it's 3.0.0

@@ -1,0 +1,5 @@
+https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2
+
+openid	Required to indicate the application wants to use OIDC to authenticate the member.
+profile	Required to retrieve the member's lite profile including their id, name, and profile picture.
+email	Required to retrieve the member's email address.

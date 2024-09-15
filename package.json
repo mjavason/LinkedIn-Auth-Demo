@@ -29,7 +29,7 @@
     "express-session": "^1.18.0",
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
-    "passport-linkedin-oauth2": "^2.0.0",
+    "passport-linkedin-oauth2": "git+https://github.com/auth0/passport-linkedin-oauth2"    ,
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

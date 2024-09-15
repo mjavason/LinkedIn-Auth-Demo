@@ -23,6 +23,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(morgan('dev'));
+app.use(
+  session({
+    secret: 'SECRET',
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 setupSwagger(app, BASE_URL);
 
 passport.use(
@@ -31,7 +41,7 @@ passport.use(
       clientID,
       clientSecret,
       callbackURL,
-      scope: ['r_emailaddress', 'r_liteprofile'], // Request these scopes from LinkedIn
+      scope: ['email', 'profile', 'openid'], // Request these scopes from LinkedIn
     },
     function (
       accessToken: string,
@@ -58,27 +68,16 @@ passport.deserializeUser((obj: any, done) => {
 //#endregion App Setup
 
 //#region Code here
-// Middleware to handle sessions
-app.use(
-  session({
-    secret: 'SECRET',
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-
 // LinkedIn auth route
-app.get('/auth/linkedin', passport.authenticate('linkedin'));
+app.get(
+  '/auth/linkedin',
+  passport.authenticate('linkedin', { state: 'SOME STATE' })
+);
 
 // LinkedIn callback route
 app.get(
   '/auth/linkedin/callback',
-  passport.authenticate('linkedin', {
-    failureRedirect: '/',
-  }),
+  passport.authenticate('linkedin', { failureRedirect: '/' }),
   (req: Request, res: Response) => {
     // Optionally handle authenticated user data
     return res.send(req.user);
@@ -157,14 +156,14 @@ app.use((req: Request, res: Response) => {
     .json({ success: false, message: 'API route does not exist' });
 });
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // throw Error('This is a sample error');
+// app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+//   // throw Error('This is a sample error');
 
-  console.log(`${'\x1b[31m'}${err.message}${'\x1b][0m]'} `);
-  return res
-    .status(500)
-    .send({ success: false, status: 500, message: err.message });
-});
+//   console.log(`${'\x1b[31m'}${err.message}${'\x1b][0m]'} `);
+//   return res
+//     .status(500)
+//     .send({ success: false, status: 500, message: err.message });
+// });
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
