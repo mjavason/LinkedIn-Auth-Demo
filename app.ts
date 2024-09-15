@@ -156,7 +156,7 @@ app.use((req: Request, res: Response) => {
     .json({ success: false, message: 'API route does not exist' });
 });
 
-// app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 //   // throw Error('This is a sample error');
 
 //   console.log(`${'\x1b[31m'}${err.message}${'\x1b][0m]'} `);
